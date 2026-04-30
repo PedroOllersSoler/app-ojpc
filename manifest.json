@@ -1,0 +1,23 @@
+{
+  "name": "OJPC 2026 — Operativa",
+  "short_name": "OJPC 2026",
+  "description": "OJ Pathway Capital - Diario de Operativa",
+  "start_url": "/ojpc2026/",
+  "scope": "/ojpc2026/",
+  "display": "standalone",
+  "background_color": "#0a0906",
+  "theme_color": "#0a0906",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
