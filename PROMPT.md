@@ -10,7 +10,7 @@ Soy Pedro Ollers Soler, trader en formación con 2 años de experiencia, operati
 ## LA APP — APP_OJPC
 URL: https://pedroollerssoler.github.io/app-ojpc
 Repositorio: https://github.com/PedroOllersSoler/app-ojpc
-Nombre definitivo: APP_OJPC — herramienta operativa permanente de OJ Pathway Capital
+Nombre definitivo: APP_OJPC — herramienta operativa permanente de OJ Pathway Capitalhh
 
 Esta no es una app de temporada. Es la plataforma central donde OJPC registra, analiza y evoluciona su operativa de forma indefinida. Se actualiza y mejora de forma continua desde este proyecto.
 
@@ -79,6 +79,7 @@ Cuando me pases una captura de TradingView con ese comando, debes:
 
                                                                               ## HISTORIAL DE VERSIONES
                                                                               v1.0 — Estructura base, Bloque A/B, métricas, importación JSON, patrón emocional
+v1.1 — SETUPS personalizados (10 setups propios) + columna SETUP visible en fila sin expandir
 
                                                                               ---
 
