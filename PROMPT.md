@@ -83,5 +83,6 @@ v1.1 — SETUPS personalizados (10 setups propios) + columna SETUP visible en fi
 
                                                                               ---
 
+v1.2 — Col. RIESGO + PARCIALES + RR FINAL calculado + AL EJECUTAR + Inquieto en estados ánimo + NOTAS OPERATIVA + GREEN C.LIMIT color dorado
                                                                               ## MEJORAS PENDIENTES
                                                                               [Se irá completando sobre la marcha]
