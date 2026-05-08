@@ -294,9 +294,12 @@ document.getElementById('m-expect').innerHTML=card('EXPECTANCY',exp,parseFloat(e
 document.getElementById('m-sec').innerHTML=card('NO EJECUTADAS',ne.length,'#F39C12')+card('BLOQUE B PENDIENTE',ops.filter(o=>!o.sesgo&&!o.sent_antes).length,'#ff4e4e');
 document.getElementById('m-modal').innerHTML=MODALIDADES.map(m=>{const mo=ej.filter(o=>o.modalidad===m);const mn=mo.reduce((a,o)=>a+parseFloat(o.resultado_usd||0),0);return mo.length?card(m.toUpperCase(),`${mo.length} ops`,null,`${mn>0?'+':''}${mn.toFixed(0)}$`):''}).join('');
 const noej=ne;
+const noejM=noej.filter(o=>o.tipo==='NO EJECUTADO');
+const noejL=noej.filter(o=>o.tipo==='NO EJEC. LÍMITE');
 const noejRv=noej.filter(o=>o.rr).map(o=>parseFloat(o.rr));
 const noejRm=noejRv.length>0?(noejRv.reduce((a,b)=>a+b,0)/noejRv.length).toFixed(2):'-';
-document.getElementById('m-noej').innerHTML=card('NO EJECUTADAS',noej.length,'#F39C12')+card('RR MEDIO POTENCIAL',noejRm,'#6eb8ff')+card('TOTAL OPS',ops.length,'#1e1c14');
+const noejNt=noej.filter(o=>o.rr).reduce((a,o)=>a+parseFloat(o.rr||0),0);
+document.getElementById('m-noej').innerHTML=card('TOTAL NO EJEC.',noej.length,'#F39C12','mercado '+noejM.length+' · límite '+noejL.length)+card('RR MEDIO POTENCIAL',noejRm,'#6eb8ff','R acumulado: '+(noejNt>0?'+':'')+noejNt.toFixed(2)+'R')+card('NO EJEC. MERCADO',noejM.length,'#e67e22')+card('NO EJEC. LÍMITE',noejL.length,'#2980B9');
 const mercado=ops.filter(o=>o.tipo==='MERCADO');
 const limite=ops.filter(o=>o.tipo==='LÍMITE');
 const calcTipo=(arr)=>{const cr2=arr.filter(o=>o.resultado_usd!=='');const ga2=cr2.filter(o=>parseFloat(o.resultado_usd)>0);const wr2=cr2.length>0?Math.round((ga2.length/cr2.length)*100):0;const nt2=cr2.reduce((a,o)=>a+parseFloat(o.resultado_usd||0),0);const rv2=arr.filter(o=>o.rr).map(o=>parseFloat(o.rr));const rm2=rv2.length>0?(rv2.reduce((a,b)=>a+b,0)/rv2.length).toFixed(2):'—';return{wr:wr2,nt:nt2,rm:rm2,ga:ga2.length,pe:cr2.length-ga2.length,len:arr.length};};
