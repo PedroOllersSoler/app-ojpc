@@ -79,6 +79,45 @@ select option{background:#111008!important;}
 .page{display:none;}
 .page.active{display:block;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">function destroyChart(id){var ch=Chart.getChart(id);if(ch)ch.destroy();}
+function chOpts(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#4a4540',font:{size:9}}},tooltip:{backgroundColor:'#0e0c08',borderColor:'#2a2816',borderWidth:1,titleColor:'#c8a84b',bodyColor:'#e8e0d0',titleFont:{size:9},bodyFont:{size:9}}},scales:{x:{ticks:{color:'#4a4540',font:{size:8}},grid:{color:'#1e1c14'}},y:{ticks:{color:'#4a4540',font:{size:8}},grid:{color:'#1e1c14'}}}};}
+function renderAnalisis(){
+var ej=ops.filter(function(o){return o.tipo==='MERCADO'||o.tipo==='LÍMITE';});
+var semMap={};ej.forEach(function(o){var s=o.semana||'?';if(!semMap[s])semMap[s]=0;var r=parseFloat(o.rr_final||o.rr||0);if(o.resultado_usd!==''&&o.resultado_usd!==undefined){semMap[s]+=(parseFloat(o.resultado_usd)>0?r:-1);}});
+var semKeys=Object.keys(semMap).sort();var equityCum=[];var acc=0;
+semKeys.forEach(function(k){acc+=semMap[k];equityCum.push(parseFloat(acc.toFixed(2)));});
+destroyChart('chart-equity');
+new Chart(document.getElementById('chart-equity'),{type:'line',data:{labels:semKeys,datasets:[{label:'R acumulado',data:equityCum,borderColor:'#4eff9a',backgroundColor:'rgba(78,255,154,0.07)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4eff9a',tension:0.3,fill:true}]},options:chOpts()});
+var dsMap={};var dsCnt={};ops.forEach(function(o){var s=o.semana||'?';if(!dsMap[s]){dsMap[s]=0;dsCnt[s]=0;}dsMap[s]+=ds(o);dsCnt[s]++;});
+var dsKeys=Object.keys(dsMap).sort();var dsAvg=dsKeys.map(function(k){return parseFloat((dsMap[k]/dsCnt[k]).toFixed(1));});
+destroyChart('chart-ds');
+var dsOpts=chOpts();new Chart(document.getElementById('chart-ds'),{type:'line',data:{labels:dsKeys,datasets:[{label:'DS medio',data:dsAvg,borderColor:'#c8a84b',backgroundColor:'rgba(200,168,75,0.07)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#c8a84b',tension:0.3,fill:true},{label:'Obj.80',data:dsKeys.map(function(){return 80;}),borderColor:'#ff4e4e',borderWidth:1,borderDash:[4,4],pointRadius:0}]},options:dsOpts});
+var bk={'<-2':0,'-2a-1':0,'-1a0':0,'0a1':0,'1a2':0,'2a3':0,'>3':0};
+ej.forEach(function(o){if(o.resultado_usd===''||o.resultado_usd===undefined)return;var r=parseFloat(o.rr_final||o.rr||0);var win=parseFloat(o.resultado_usd)>0;var rv=win?r:-1;if(rv<-2)bk['<-2']++;else if(rv<-1)bk['-2a-1']++;else if(rv<0)bk['-1a0']++;else if(rv<1)bk['0a1']++;else if(rv<2)bk['1a2']++;else if(rv<3)bk['2a3']++;else bk['>3']++;});
+var bLab=['<-2','-2/-1','-1/0','0/1','1/2','2/3','>3'];
+var bDat=Object.values(bk);
+var bCol=['#ff4e4e','#ff4e4e','#ff7f50','#888','#4eff9a','#4eff9a','#4eff9a'];
+destroyChart('chart-hist');
+var hOpts=chOpts();hOpts.plugins.legend={display:false};
+new Chart(document.getElementById('chart-hist'),{type:'bar',data:{labels:bLab,datasets:[{label:'Ops',data:bDat,backgroundColor:bCol,borderRadius:2}]},options:hOpts});
+var sNom=['Asia','Londres','Nueva York','Overlap'];
+var sWR=sNom.map(function(s){var so=ej.filter(function(o){return o.sesion===s;});var cr=so.filter(function(o){return o.resultado_usd!=='';});var ga=cr.filter(function(o){return parseFloat(o.resultado_usd)>0;});return cr.length>0?Math.round((ga.length/cr.length)*100):0;});
+var sCol=sWR.map(function(w){return w>=50?'#4eff9a':'#ff4e4e';});
+destroyChart('chart-sesion');
+var sOpts=chOpts();sOpts.plugins.legend={display:false};
+new Chart(document.getElementById('chart-sesion'),{type:'bar',data:{labels:sNom,datasets:[{label:'WR%',data:sWR,backgroundColor:sCol,borderRadius:2}]},options:sOpts});
+var sExp=[];var sLab=[];
+SETUPS.forEach(function(s){var so=ej.filter(function(o){return o.setup===s;});var cr=so.filter(function(o){return o.resultado_usd!==''&&o.resultado_usd!==undefined;});if(cr.length<2)return;var ga=cr.filter(function(o){return parseFloat(o.resultado_usd)>0;});var wr=ga.length/cr.length;var rrG=ga.map(function(o){return parseFloat(o.rr_final||o.rr||0);});var avgG=rrG.length>0?rrG.reduce(function(a,b){return a+b;},0)/rrG.length:0;var exp=parseFloat(((wr*avgG)-((1-wr)*1)).toFixed(3));sLab.push(s);sExp.push(exp);});
+destroyChart('chart-setup');
+if(sLab.length){var eOpts=chOpts();new Chart(document.getElementById('chart-setup'),{type:'bar',data:{labels:sLab,datasets:[{label:'Expectancy',data:sExp,backgroundColor:sExp.map(function(v){return v>0?'rgba(78,255,154,0.7)':'rgba(255,78,78,0.7)';}),borderColor:sExp.map(function(v){return v>0?'#4eff9a':'#ff4e4e';}),borderWidth:1,borderRadius:2}]},options:eOpts});}else{document.getElementById('chart-setup').parentElement.innerHTML='<div style="color:#4a4540;font-size:9px;padding:20px">Mínimo 2 ops por setup</div>';}
+var mOps=MODALIDADES.map(function(m){return ej.filter(function(o){return o.modalidad===m;}).length;});
+var mCol=['#27AE60','#6eb8ff','#ffb84e','#ff9eb8','#a04eff','#4eb8ff','#c8a84b'];
+destroyChart('chart-modal');
+var mOpts=chOpts();mOpts.plugins.legend={display:false};
+new Chart(document.getElementById('chart-modal'),{type:'bar',data:{labels:MODALIDADES,datasets:[{label:'Ops',data:mOps,backgroundColor:mCol,borderRadius:2}]},options:mOpts});
+}
+
+</script>
 </head>
 <body>
 
@@ -92,7 +131,7 @@ select option{background:#111008!important;}
   </div>
   <div class="tabs">
     <button class="tab active" onclick="setTab('operativa',this)">OPERATIVA</button>
-    <button class="tab" onclick="setTab('metricas',this)">MÉTRICAS</button>
+    <button class="tab" onclick="setTab('metricas',this)">MÉTRICAS</button><button class="tab" id="btn-analisis" onclick="setTab('analisis',this)">ANÁLISIS</button>
   </div>
 </div>
 
@@ -215,7 +254,7 @@ function load(){loadFonds();try{ops=JSON.parse(localStorage.getItem(SK)||'[]');}
 function save(){localStorage.setItem(SK,JSON.stringify(ops));}
 function uid(){return Date.now()+Math.random();}
 function emptyOp(o={}){return{id:uid(),tipo:'',fecha:'',hora:'',sesion:'',activo:'BTC',direccion:'',rr:'',resultado_usd:'',resultado_pct:'',semana:'',modalidad:'',tf_entrada:'',enlace:'',sesgo:'',sent_antes:'',sent_durante:'',sent_cierre:'',espero:'',bien:'',mal:'',mejorar:'',nota_psico:'',setup:'',riesgo:'',parciales:'',rr_final:'',sent_al_ejecutar:'',notas_operativa:'',fondeada:'',leverage:'',mal_cats:'',...o};}
-function setTab(tab,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='metricas')renderMetrics();}
+function setTab(tab,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('page-'+tab).classList.add('active');if(tab==='metricas')renderMetrics();if(tab==='analisis')renderAnalisis();}
 function addOp(){const op=emptyOp();ops.unshift(op);save();expandedId=op.id;renderRows();}
 function updateOp(id,f,v){const o=ops.find(x=>x.id===id);if(o){o[f]=v;if(f==='parciales'||f==='rr'){o.rr_final=calcRRFinal(o.rr,o.parciales)||'';renderRows();}save();}}
 function deleteOp(id){ops=ops.filter(o=>o.id!==id);if(expandedId===id)expandedId=null;save();renderRows();}
@@ -350,5 +389,6 @@ load();renderRows();
     <div style="font-size:8px;color:#4a4540;margin-top:6px;">Los cambios se guardan automáticamente</div>
   </div>
 </div>
+<div id="page-analisis" class="page" style="display:none"><div class="metrics-wrap"><div style="margin-bottom:22px;"><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:#c8a84b;letter-spacing:2px;">ANÁLISIS GRÁFICO</div><div style="font-size:7px;color:#333;letter-spacing:2px;margin-top:3px;">EQUITY CURVE · DS TENDENCIA · DISTRIBUCIÓN R · SETUP EDGE · SESIÓN</div></div><div class="st">EQUITY CURVE — R ACUMULADO POR SEMANA</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;margin-bottom:28px;height:220px;"><canvas id="chart-equity"></canvas></div><div class="st">DISCIPLINE SCORE — TENDENCIA SEMANAL</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;margin-bottom:28px;height:200px;"><canvas id="chart-ds"></canvas></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;"><div><div class="st" style="margin-bottom:10px;">DISTRIBUCIÓN R-MÚLTIPLES</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;height:200px;"><canvas id="chart-hist"></canvas></div></div><div><div class="st" style="margin-bottom:10px;">WR POR SESIÓN</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;height:200px;"><canvas id="chart-sesion"></canvas></div></div></div><div class="st">EXPECTANCY POR SETUP</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;margin-bottom:28px;height:220px;"><canvas id="chart-setup"></canvas></div><div class="st">OPS POR MODALIDAD</div><div style="background:#0e0c08;border:1px solid #1e1c14;border-radius:2px;padding:16px;margin-bottom:28px;height:200px;"><canvas id="chart-modal"></canvas></div></div></div>
 </body>
 </html>
