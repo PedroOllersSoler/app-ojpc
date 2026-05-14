@@ -230,7 +230,7 @@ function exportJSON(){const a=document.createElement('a');a.href=URL.createObjec
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
 
 // ─── GOOGLE DRIVE SYNC ─────────────────────────────────────────
-const GDRIVE_CLIENT_ID='PENDING_CLIENT_ID.apps.googleusercontent.com';
+const GDRIVE_CLIENT_ID='765843198218-ql0ak2dho59m6679g9iq2ana62tr8v4a.apps.googleusercontent.com';
 const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 const GDRIVE_FILENAME='ojpc_data.json';
 let gdriveToken=null,gdriveFileId=null,gdriveTimer=null;
