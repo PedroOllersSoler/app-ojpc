@@ -845,7 +845,7 @@ function driveLogin(){
 function driveSave(){
   if(!_driveToken){alert('Primero pulsa CONECTAR');return;}
   drvSt('● SUBIENDO...','#c8a84b');
-  var data=JSON.stringify({operaciones:ops},null,2);
+  var data=JSON.stringify({operaciones:ops,fondos:fonds},null,2);
   var xhr=new XMLHttpRequest();
   xhr.open('PATCH','https://www.googleapis.com/upload/drive/v3/files/'+DRIVE_FILE_ID+'?uploadType=media');
   xhr.setRequestHeader('Authorization','Bearer '+_driveToken);
@@ -870,7 +870,7 @@ function driveLoad(){
         var d=JSON.parse(xhr.responseText);
         if(d.operaciones){
           if(confirm('Drive: '+d.operaciones.length+' ops. Local: '+ops.length+' ops.\n\nReemplazar datos locales?')){
-            ops=d.operaciones;localStorage.setItem('ojpc_ops',JSON.stringify(ops));renderOps();renderMetrics();
+            ops=d.operaciones;localStorage.setItem(SK,JSON.stringify(ops));if(d.fondos){fonds=d.fondos;localStorage.setItem(SK_FOND,JSON.stringify(fonds));}renderOps();renderMetrics();
             drvSt('● CARGADO ('+ops.length+' ops)','#27AE60');setTimeout(function(){drvSt('● CONECTADO','#27AE60');},4000);
           } else {drvSt('● CONECTADO','#27AE60');}
         }
