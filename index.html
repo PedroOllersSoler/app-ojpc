@@ -11,7 +11,7 @@ html,body{margin:0;padding:0;background:#0a0906;color:#e8e0d0;font-family:'Couri
 /* NAV */
 .nav{display:flex;align-items:center;background:#0d0b07;border-bottom:1px solid #2a2816;padding:0 14px;height:38px;gap:4px}
 .nav-logo{color:#c8a84b;font-size:13px;font-weight:bold;letter-spacing:3px;margin-right:20px;white-space:nowrap}
-.nav-tab{padding:0 14px;height:38px;line-height:38px;cursor:pointer;color:#5a4f35;font-size:10px;letter-spacing:1px;border-bottom:2px solid transparent;transition:all .15s;user-select:none;white-space:nowrap}
+.nav-tab{padding:0 14px;height:38px;line-height:38px;cursor:pointer;color:#5a4f35;font-size:10px;letter-hspacing:1px;border-bottom:2px solid transparent;transition:all .15s;user-select:none;white-space:nowrap}
 .nav-tab:hover{color:#c8a84b}.nav-tab.active{color:#c8a84b;border-bottom-color:#c8a84b}
 /* TOOLBAR */
 .toolbar{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#0d0b07;border-bottom:1px solid #1a1810;flex-wrap:wrap}
@@ -181,7 +181,7 @@ var TF_OPTS=['30s','1m','2m','5m','15m','1h','4h'];
 var MODALIDADES=['Swing','Day','Scalp','Micro-Scalp','Híbrida','F S-D','F D-S','F S-MS'];
 var SESGOS=['Alcista','Bajista','Neutro'];
 var SESIONES=['Asia','Londres','Nueva York','Overlap','Fuera sesión'];
-var MAL_CATS=['FOMO','REVENGE','MOVÍ STOP','SL AJUSTADO','SL AMPLIO','CERRÉ PRONTO','MANTUVE PÉRD.','SOBRE-APALANCADO','FUERA DE SESIÓN','SIN SETUP','MTF','D. MENOR','TOKES','EJEC.'];
+var MAL_CATS=['FOMO','REVENGE','MOVÍ STOP','SL AJUSTADO','SL AMPLIO','CERRÉ PRONTO','MANTUVE PÉRD.','SOBRE-APALANCADO','FUERA DE SESIÓN','SIN SETUP','MTF','D. MENOR','TOKES','EJEC.','DUDA','PATRÓN'];
 var LEV_OPTS=['Nada','Bajo','Medio','Alto'];
 
 var TIPO_COLORS={'MERCADO':'#27AE60','LÍMITE':'#c8c0b0','NO EJECUTADO':'#F39C12','NO EJEC. LÍMITE':'#ff4e4e','[MS] MERCADO':'#e91e8c','[MS] LÍMITE':'#e91e8c'};
@@ -471,11 +471,10 @@ function renderExpand(op){
   s+='<div></div>';
   s+='</div>';
   // LÍNEA 2 - EMOCIONAL
-  s+='<div class="exp-grid" style="grid-template-columns:repeat(4,1fr) auto;margin-bottom:10px">';
+  var isNoEj=(op.tipo==='NO EJECUTADO'||op.tipo==='NO EJEC. LÍMITE');
+  s+='<div class="exp-grid" style="grid-template-columns:'+(isNoEj?'1fr auto':'repeat(4,1fr) auto')+';margin-bottom:10px">';
   s+='<div>'+sl('sent_antes','ANTES')+'</div>';
-  s+='<div>'+sl('sent_al_ejecutar','AL EJECUTAR')+'</div>';
-  s+='<div>'+sl('sent_durante','DURANTE')+'</div>';
-  s+='<div>'+sl('sent_cierre','CIERRE')+'</div>';
+  if(!isNoEj){s+='<div>'+sl('sent_al_ejecutar','AL EJECUTAR')+'</div><div>'+sl('sent_durante','DURANTE')+'</div><div>'+sl('sent_cierre','CIERRE')+'</div>';}
   s+='<div><div class="fl">LEVERAGE</div>'+sc(LEV_OPTS,'leverage',op.leverage||'')+'</div>';
   s+='</div>';
   // LÍNEA 3 - TEXTO
@@ -592,6 +591,10 @@ function renderMetrics(){
   html+=card('NO EJEC. LÍMITE',ops.filter(function(o){return o.tipo==='NO EJEC. LÍMITE';}).length,'#ff4e4e','#ff4e4e');
   html+=card('RR MEDIO POTENCIAL',nMed,'#6eb8ff','#6eb8ff');
   html+=card('R ACUM. POTENCIAL',nCum,'#F39C12','#F39C12');
+  var nDuda=noejec.filter(function(o){return o.mal_cats&&o.mal_cats.split(',').indexOf('DUDA')>=0&&o.resultado==='WIN';});
+  var nDudaR=nDuda.filter(function(o){return o.rr;}).map(function(o){return parseFloat(o.rr);});
+  var nDudaCum=nDudaR.length>0?nDudaR.reduce(function(a,b){return a+b;},0).toFixed(2):'0';
+  html+=card('R PERDIDO POR DUDA',nDudaCum,'#ff4e4e','#ff4e4e');
   html+='</div>';
 
   html+='<div class="st">POR TIPO</div><div class="mg">';
