@@ -114,7 +114,7 @@ html,body{margin:0;padding:0;background:#0a0906;color:#e8e0d0;font-family:'Couri
 <div id="page-operativa" class="page active">
   <div class="toolbar">
     <button class="btn" onclick="addOp()">+ MANUAL</button>
-    <button class="btn" onclick="driveSync()" id="btn-drive" title="Sincronizar con Google Drive">☁ DRIVE</button>
+    <span id="drv-st" style="font-size:9px;padding:2px 8px;border:1px solid #5a1010;color:#ff4e4e;font-family:'Courier New',monospace;white-space:nowrap;letter-spacing:.3px">● SIN CONECTAR</span><button class="btn btn-sm" onclick="driveLogin()" id="btn-drv-login">☁ CONECTAR</button><button class="btn btn-sm" onclick="driveSave()" id="btn-drv-up" disabled style="opacity:0.4">↑ SUBIR</button><button class="btn btn-sm" onclick="driveLoad()" id="btn-drv-dn" disabled style="opacity:0.4">↓ CARGAR</button>
     <button class="btn" onclick="openImport()">â IMPORTAR</button>
     <input class="inp" id="f-semana" placeholder="SEMANA" style="width:72px" oninput="applyFilters()">
     <select class="sel" id="f-tipo" onchange="applyFilters()"><option value="">TODOS TIPOS</option></select>
@@ -826,10 +826,61 @@ var DRIVE_CLIENT_ID='765843198218-ql0ak2dho59m6679g9iq2ana62tr8v4a.apps.googleus
 var DRIVE_FILE_ID='1-Zgr6wFxJGi7me1sP-kTH3NZxRMfIEKR';
 var DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 var _driveToken=null;
-function driveSync(){if(!window.google||!window.google.accounts){alert('GIS no cargado. Recarga.');return;}var tc=google.accounts.oauth2.initTokenClient({client_id:DRIVE_CLIENT_ID,scope:DRIVE_SCOPE,callback:function(resp){if(resp.error){alert('Error auth: '+resp.error);return;}_driveToken=resp.access_token;driveMenu();}});tc.requestAccessToken();}
-function driveMenu(){var op=confirm('DRIVE SYNC\n\nOK = Subir a Drive\nCancelar = Descargar de Drive');if(op)driveSave();else driveLoad();}
-function driveSave(){var data=JSON.stringify({operaciones:ops},null,2);var xhr=new XMLHttpRequest();xhr.open('PATCH','https://www.googleapis.com/upload/drive/v3/files/'+DRIVE_FILE_ID+'?uploadType=media');xhr.setRequestHeader('Authorization','Bearer '+_driveToken);xhr.setRequestHeader('Content-Type','application/json');xhr.onload=function(){if(xhr.status===200){var btn=document.getElementById('btn-drive');if(btn){btn.style.color='#27AE60';setTimeout(function(){btn.style.color='';},2000);}alert('✓ Guardado en Drive ('+ops.length+' ops)');}else{alert('Error guardando: '+xhr.status);}};xhr.send(data);}
-function driveLoad(){var xhr=new XMLHttpRequest();xhr.open('GET','https://www.googleapis.com/drive/v3/files/'+DRIVE_FILE_ID+'?alt=media');xhr.setRequestHeader('Authorization','Bearer '+_driveToken);xhr.onload=function(){if(xhr.status===200){try{var d=JSON.parse(xhr.responseText);if(d.operaciones&&confirm('Drive tiene '+d.operaciones.length+' ops. ¿Reemplazar datos locales?')){ops=d.operaciones;localStorage.setItem('ojpc_ops',JSON.stringify(ops));renderOps();renderMetrics();alert('✓ Cargado desde Drive');}}catch(e){alert('Error JSON: '+e);}}else{alert('Error descargando: '+xhr.status);}};xhr.send();}
+
+function drvSt(txt,col){var el=document.getElementById('drv-st');if(!el)return;el.textContent=txt;el.style.color=col;el.style.borderColor=(col==='#27AE60'?'#1a5a2a':col==='#c8a84b'?'#5a4a10':'#5a1010');}
+function drvEnable(ok){['btn-drv-up','btn-drv-dn'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=!ok;b.style.opacity=ok?'1':'0.4';}});var bl=document.getElementById('btn-drv-login');if(bl)bl.textContent=ok?'☁ SESION OK':'☁ CONECTAR';}
+
+function driveLogin(){
+  if(!window.google||!window.google.accounts){alert('GIS no cargado. Recarga la pagina.');return;}
+  drvSt('● CONECTANDO...','#c8a84b');
+  var tc=google.accounts.oauth2.initTokenClient({client_id:DRIVE_CLIENT_ID,scope:DRIVE_SCOPE,callback:function(resp){
+    if(resp.error){drvSt('● ERROR AUTH','#ff4e4e');alert('Error auth: '+resp.error);return;}
+    _driveToken=resp.access_token;
+    drvSt('● CONECTADO','#27AE60');
+    drvEnable(true);
+  }});
+  tc.requestAccessToken();
+}
+
+function driveSave(){
+  if(!_driveToken){alert('Primero pulsa CONECTAR');return;}
+  drvSt('● SUBIENDO...','#c8a84b');
+  var data=JSON.stringify({operaciones:ops},null,2);
+  var xhr=new XMLHttpRequest();
+  xhr.open('PATCH','https://www.googleapis.com/upload/drive/v3/files/'+DRIVE_FILE_ID+'?uploadType=media');
+  xhr.setRequestHeader('Authorization','Bearer '+_driveToken);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.onload=function(){
+    if(xhr.status===200){drvSt('● GUARDADO ('+ops.length+' ops)','#27AE60');setTimeout(function(){drvSt('● CONECTADO','#27AE60');},4000);}
+    else if(xhr.status===401){_driveToken=null;drvEnable(false);drvSt('● TOKEN EXPIRADO','#ff4e4e');alert('Sesion expirada. Vuelve a conectar.');}
+    else{drvSt('● ERROR '+xhr.status,'#ff4e4e');alert('Error subiendo: '+xhr.status);}
+  };
+  xhr.send(data);
+}
+
+function driveLoad(){
+  if(!_driveToken){alert('Primero pulsa CONECTAR');return;}
+  drvSt('● CARGANDO...','#c8a84b');
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','https://www.googleapis.com/drive/v3/files/'+DRIVE_FILE_ID+'?alt=media');
+  xhr.setRequestHeader('Authorization','Bearer '+_driveToken);
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var d=JSON.parse(xhr.responseText);
+        if(d.operaciones){
+          if(confirm('Drive: '+d.operaciones.length+' ops. Local: '+ops.length+' ops.\n\nReemplazar datos locales?')){
+            ops=d.operaciones;localStorage.setItem('ojpc_ops',JSON.stringify(ops));renderOps();renderMetrics();
+            drvSt('● CARGADO ('+ops.length+' ops)','#27AE60');setTimeout(function(){drvSt('● CONECTADO','#27AE60');},4000);
+          } else {drvSt('● CONECTADO','#27AE60');}
+        }
+      }catch(e){drvSt('● ERROR JSON','#ff4e4e');alert('Error datos: '+e);}
+    }
+    else if(xhr.status===401){_driveToken=null;drvEnable(false);drvSt('● TOKEN EXPIRADO','#ff4e4e');alert('Sesion expirada. Vuelve a conectar.');}
+    else{drvSt('● ERROR '+xhr.status,'#ff4e4e');alert('Error cargando: '+xhr.status);}
+  };
+  xhr.send();
+}
 // ── FIN DRIVE SYNC ──
 </script>
 </body>
