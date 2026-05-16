@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>APP_OJPC v2.2</title>
+<title>APP_OJPC v2.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 html,body{margin:0;padding:0;background:#0a0906;color:#e8e0d0;font-family:'Courier New',monospace;font-size:11px;min-height:100vh}
@@ -195,7 +195,7 @@ var ops=[],fonds=[],expandedId=null,pnlMode=false;
 var _fSemana='',_fTipo='',_fSetup='',_fFond='';
 
 function loadOps(){try{return JSON.parse(localStorage.getItem(SK))||[];}catch(e){return[];}}
-function saveOps(){localStorage.setItem(SK,JSON.stringify(ops));}
+function saveOps(){try{localStorage.setItem(SK,JSON.stringify(ops));}catch(e){console.error("ERROR GUARDADO:",e);alert("ERROR AL GUARDAR: "+e.message+"\nExporta un backup.");}}
 function loadFonds(){try{return JSON.parse(localStorage.getItem(SK_FOND))||[];}catch(e){return[];}}
 function saveFonds(){localStorage.setItem(SK_FOND,JSON.stringify(fonds));}
 function fondColor(n){var i=fonds.indexOf(n);return i>=0?FOND_PAL[i%FOND_PAL.length]:'#5a4f35';}
@@ -441,7 +441,7 @@ function renderExpand(op){
     var col=val>0?'#27AE60':val<0?'#ff4e4e':'#c8a84b';
     return '<div><div class="fl">'+label+'</div><div class="sent-wrap"><span style="color:#3a3020;font-size:9px">-5</span><input type="range" class="sent-range" min="-5" max="5" step="1" value="'+val+'" oninput="updateOp('+id+',\''+field+'\',parseInt(this.value));this.nextElementSibling.textContent=this.value;this.nextElementSibling.style.color=this.value>0?\'#27AE60\':this.value<0?\'#ff4e4e\':\'#c8a84b\'"><span class="sent-num" style="color:'+col+'">'+val+'</span><span style="color:#3a3020;font-size:9px">+5</span></div></div>';
   }
-  function mkEnl(url,fld){return url&&(url.indexOf('http')===0||url.indexOf('www')===0)?'<a href="'+url+'" target="_blank" style="color:#6eb8ff;font-size:10px;word-break:break-all">'+escH(url)+'</a>':'<input class="exp-inp" value="'+escH(url||'')+'" placeholder="URL captura" onchange="updateOp('+id+',\''+fld+'\',this.value)">';}
+  function mkEnl(url,fld){return url&&(url.indexOf('http')===0||url.indexOf('www')===0)?'<a href="'+url+'" target="_blank" style="color:#6eb8ff;font-size:10px;word-break:break-all">'+escH(url)+'</a>':'<input class="exp-inp" value="'+escH(url||'')+'" placeholder="URL captura" oninput="updateOp('+id+',\''+fld+'\',this.value)">';}
   var enlaceEl=mkEnl(op.enlace||'','enlace');
   var enlaceEl2=mkEnl(op.enlace2||'','enlace2');
   var enlaceEl3=mkEnl(op.enlace3||'','enlace3');
@@ -450,10 +450,10 @@ function renderExpand(op){
   // LÍNEA 0 - DATOS BLOQUE A EDITABLES
   s+='<div class="exp-grid" style="grid-template-columns:repeat(8,1fr);margin-bottom:10px">';
   s+='<div><div class="fl">TIPO</div><select class="r-sel" style="color:'+(TIPO_COLORS[op.tipo]||'#c8c0b0')+';border-bottom:1px solid #2a2816;width:100%" onchange="updateOp('+id+',\'tipo\',this.value);this.style.color=TIPO_COLORS[this.value]||\'#c8c0b0\';document.getElementById(\'card-'+id+'\').style.borderLeftColor=TIPO_COLORS[this.value]||\'#2a2816\'">'+TIPOS.map(function(t){return '<option'+(op.tipo===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>';
-  s+='<div><div class="fl">FECHA</div><input class="exp-inp" value="'+escH(op.fecha||'')+'" placeholder="DD/MM/AA" onchange="updateOp('+id+',\'fecha\',this.value)"></div>';
-  s+='<div><div class="fl">HORA</div><input class="exp-inp" value="'+escH(op.hora||'')+'" placeholder="HH:MM" onchange="updateOp('+id+',\'hora\',this.value)"></div>';
+  s+='<div><div class="fl">FECHA</div><input class="exp-inp" value="'+escH(op.fecha||'')+'" placeholder="DD/MM/AA" oninput="updateOp('+id+',\'fecha\',this.value)"></div>';
+  s+='<div><div class="fl">HORA</div><input class="exp-inp" value="'+escH(op.hora||'')+'" placeholder="HH:MM" oninput="updateOp('+id+',\'hora\',this.value)"></div>';
   s+='<div><div class="fl">SESIÓN</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;color:'+(SES_COLORS[op.sesion]||'#a09880')+'" onchange="updateOp('+id+',\'sesion\',this.value);this.style.color=SES_COLORS[this.value]||\'#a09880\'"><option value="">-</option>'+SESIONES.map(function(s){return '<option'+(op.sesion===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>';
-  s+='<div><div class="fl">ACTIVO</div><input class="exp-inp" value="'+escH(op.activo||'')+'" placeholder="BTC" onchange="updateOp('+id+',\'activo\',this.value)" style="color:#c8a84b;font-weight:bold"></div>';
+  s+='<div><div class="fl">ACTIVO</div><input class="exp-inp" value="'+escH(op.activo||'')+'" placeholder="BTC" oninput="updateOp('+id+',\'activo\',this.value)" style="color:#c8a84b;font-weight:bold"></div>';
   s+='<div><div class="fl">DIR.</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;font-weight:bold;color:'+(op.direccion==='LONG'?'#27AE60':op.direccion==='SHORT'?'#ff4e4e':'#a09880')+'" onchange="updateOp('+id+',\'direccion\',this.value);this.style.color=this.value===\'LONG\'?\'#27AE60\':this.value===\'SHORT\'?\'#ff4e4e\':\'#a09880\'"><option value="">-</option><option'+(op.direccion==='LONG'?' selected':'')+'>LONG</option><option'+(op.direccion==='SHORT'?' selected':'')+'>SHORT</option></select></div>';
   s+='<div><div class="fl">RESULTADO</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;font-weight:bold;color:'+(op.resultado==='WIN'?'#27AE60':op.resultado==='LOSS'?'#ff4e4e':op.resultado==='BE'?'#6eb8ff':'#a09880')+'" onchange="updateOp('+id+',\'resultado\',this.value);this.style.color=this.value===\'WIN\'?\'#27AE60\':this.value===\'LOSS\'?\'#ff4e4e\':this.value===\'BE\'?\'#6eb8ff\':\'#a09880\'"><option value="">AUTO</option><option'+(op.resultado==='WIN'?' selected':'')+'>WIN</option><option'+(op.resultado==='LOSS'?' selected':'')+'>LOSS</option><option'+(op.resultado==='BE'?' selected':'')+'>BE</option></select></div>';
   s+='<div></div>';
@@ -463,11 +463,11 @@ function renderExpand(op){
   s+='<div><div class="fl">SETUP</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;color:'+(SETUP_COLORS[op.setup]||'#a09880')+';font-weight:bold" onchange="updateOp('+id+',\'setup\',this.value);this.style.color=SETUP_COLORS[this.value]||\'#a09880\'"><option value="">-</option>'+SETUPS.map(function(x){return '<option'+(op.setup===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>';
   s+='<div><div class="fl">MODALIDAD</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;color:'+mC(op.modalidad)+'" onchange="updateOp('+id+',\'modalidad\',this.value);this.style.color=MODAL_COLORS[this.value]||\'#a09880\'"><option value="">-</option>'+MODALIDADES.map(function(x){return '<option'+(op.modalidad===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>';
   s+='<div><div class="fl">RIESGO</div><select class="r-sel" style="border-bottom:1px solid #2a2816;width:100%;color:#c8b890" onchange="updateOp('+id+',\'riesgo\',this.value)"><option value="" style="color:#5a4f35">-</option>'+RIESGOS.map(function(x){return '<option style="color:#c8b890;background:#0d0b07"'+(op.riesgo===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>';
-  s+='<div><div class="fl">PARCIALES</div><input class="exp-inp" value="'+escH(op.parciales||'')+'" placeholder="25,25" onchange="updateOp('+id+',\'parciales\',this.value)"></div>';
-  s+='<div><div class="fl">RR INICIAL</div><input class="exp-inp" value="'+escH(op.rr||'')+'" placeholder="2.0" onchange="updateOp('+id+',\'rr\',this.value)" style="color:#5a4f35"></div>';
-  s+='<div><div class="fl">RR FINAL</div><input class="exp-inp" value="'+escH(op.rr_final||'')+'" placeholder="1.8" onchange="updateOp('+id+',\'rr_final\',this.value)" style="color:#c8b890"></div>';
-  s+='<div><div class="fl">SEMANA</div><input id="exp-semana-'+id+'" class="exp-inp" value="'+escH(op.semana||'')+'" placeholder="AUTO" onchange="updateOp('+id+',\'semana\',this.value)"></div>';
-  s+='<div><div class="fl">RESULTADO $</div><div style="display:flex;align-items:center;border-bottom:1px solid #2a2816"><span style="color:#5a4f35;font-size:10px;padding-right:2px">$</span><input class="exp-inp" style="border:none" value="'+escH(op.resultado_usd||'')+'" placeholder="0.00" onchange="updateOp('+id+',\'resultado_usd\',this.value)"></div></div>';
+  s+='<div><div class="fl">PARCIALES</div><input class="exp-inp" value="'+escH(op.parciales||'')+'" placeholder="25,25" oninput="updateOp('+id+',\'parciales\',this.value)"></div>';
+  s+='<div><div class="fl">RR INICIAL</div><input class="exp-inp" value="'+escH(op.rr||'')+'" placeholder="2.0" oninput="updateOp('+id+',\'rr\',this.value)" style="color:#5a4f35"></div>';
+  s+='<div><div class="fl">RR FINAL</div><input class="exp-inp" value="'+escH(op.rr_final||'')+'" placeholder="1.8" oninput="updateOp('+id+',\'rr_final\',this.value)" style="color:#c8b890"></div>';
+  s+='<div><div class="fl">SEMANA</div><input id="exp-semana-'+id+'" class="exp-inp" value="'+escH(op.semana||'')+'" placeholder="AUTO" oninput="updateOp('+id+',\'semana\',this.value)"></div>';
+  s+='<div><div class="fl">RESULTADO $</div><div style="display:flex;align-items:center;border-bottom:1px solid #2a2816"><span style="color:#5a4f35;font-size:10px;padding-right:2px">$</span><input class="exp-inp" style="border:none" value="'+escH(op.resultado_usd||'')+'" placeholder="0.00" oninput="updateOp('+id+',\'resultado_usd\',this.value)"></div></div>';
   s+='<div></div>';
   s+='</div>';
   // LÍNEA 2 - EMOCIONAL
@@ -482,13 +482,13 @@ function renderExpand(op){
   s+='<div><div class="fl">SESGO</div>'+sc(SESGOS,'sesgo',op.sesgo||'')+'</div>';
   s+='<div><div class="fl">TF ENTRADA</div>'+sc(TF_OPTS,'tf_entrada',op.tf_entrada||'')+'</div>';
   s+='<div><div class="fl">MAL HECHO</div>'+malCh()+'</div>';
-  s+='<div><div class="fl">BIEN HECHO</div><input class="exp-inp" value="'+escH(op.bien||'')+'" onchange="updateOp('+id+',\'bien\',this.value)"></div>';
-  s+='<div><div class="fl">MEJORAR</div><input class="exp-inp" value="'+escH(op.mejorar||'')+'" onchange="updateOp('+id+',\'mejorar\',this.value)"></div>';
+  s+='<div><div class="fl">BIEN HECHO</div><input class="exp-inp" value="'+escH(op.bien||'')+'" oninput="updateOp('+id+',\'bien\',this.value)"></div>';
+  s+='<div><div class="fl">MEJORAR</div><input class="exp-inp" value="'+escH(op.mejorar||'')+'" oninput="updateOp('+id+',\'mejorar\',this.value)"></div>';
   s+='</div>';
   // LÍNEA 4 - NOTAS
   s+='<div class="exp-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px">';
-  s+='<div><div class="fl">QUÉ ESPERO</div><input class="exp-inp" value="'+escH(op.espero||'')+'" onchange="updateOp('+id+',\'espero\',this.value)"></div>';
-  s+='<div><div class="fl">NOTA PSICO</div><input class="exp-inp" value="'+escH(op.nota_psico||'')+'" onchange="updateOp('+id+',\'nota_psico\',this.value)"></div>';
+  s+='<div><div class="fl">QUÉ ESPERO</div><input class="exp-inp" value="'+escH(op.espero||'')+'" oninput="updateOp('+id+',\'espero\',this.value)"></div>';
+  s+='<div><div class="fl">NOTA PSICO</div><input class="exp-inp" value="'+escH(op.nota_psico||'')+'" oninput="updateOp('+id+',\'nota_psico\',this.value)"></div>';
   s+='</div>';
   s+='<div style="margin-bottom:4px"><div class="fl">ENLACE CAPTURA 1</div>'+enlaceEl+'</div>';
   s+='<div style="margin-bottom:4px"><div class="fl">ENLACE CAPTURA 2</div>'+enlaceEl2+'</div>';
@@ -872,8 +872,14 @@ function driveLoad(){
       try{
         var d=JSON.parse(xhr.responseText);
         if(d.operaciones){
-          if(confirm('Drive: '+d.operaciones.length+' ops. Local: '+ops.length+' ops.\n\nReemplazar datos locales?')){
-            ops=d.operaciones;localStorage.setItem(SK,JSON.stringify(ops));if(d.fondos){fonds=d.fondos;localStorage.setItem(SK_FOND,JSON.stringify(fonds));}renderOps();renderMetrics();
+          var lB2=ops.some(function(o){return o.bien||o.mejorar||o.nota_psico||o.espero||o.notas_operativa||o.mal_cats||o.sesgo||o.sent_antes;});
+          var dB2=d.operaciones.some(function(o){return o.bien||o.mejorar||o.nota_psico||o.espero||o.notas_operativa||o.mal_cats||o.sesgo||o.sent_antes;});
+          var wn=lB2&&!dB2?' ATENCION: Bloque B local no esta en Drive. Se fusionara y preservara.':'';
+          if(confirm('Drive: '+d.operaciones.length+' ops. Local: '+ops.length+' ops.'+(wn?'\n\n'+wn:'')+'\n\nCargar? (Bloque B local se preserva)')){
+            var B2F=['sesgo','tf_entrada','sent_antes','sent_al_ejecutar','sent_durante','sent_cierre','espero','bien','mal_cats','mejorar','nota_psico','setup','leverage','semana','fondeada','notas_operativa','enlace','enlace2','enlace3','riesgo','parciales'];
+            d.operaciones.forEach(function(dOp){var lOp=ops.find(function(o){return o.id===dOp.id;});if(!lOp)return;B2F.forEach(function(f){var lv=lOp[f];if(lv!==undefined&&lv!==''&&lv!==0&&lv!==null)dOp[f]=lv;});});
+            ops.forEach(function(lOp){if(!d.operaciones.find(function(o){return o.id===lOp.id;}))d.operaciones.push(lOp);});
+            ops=d.operaciones;localStorage.setItem(SK,JSON.stringify(ops));if(d.fondos){fonds=d.fondos;localStorage.setItem(SK_FOND,JSON.stringify(fonds));}populateFilters();renderOps();renderMetrics();
             drvSt('● CARGADO ('+ops.length+' ops)','#27AE60');setTimeout(function(){drvSt('● CONECTADO','#27AE60');},4000);
           } else {drvSt('● CONECTADO','#27AE60');}
         }
